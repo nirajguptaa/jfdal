@@ -7,11 +7,11 @@ A small web app for a GB energy utility's day-ahead buying team. It answers two 
 
 Scope: purchase decisions made in **January 2026**, so delivery days are 2 January to 1 February 2026.
 
-**Live app:** `<paste Vercel or Heroku link here>`
+**Live app:** `https://jfdal.vercel.app/`
 
 ## AI disclosure
 
-This project was built with help from Claude (Anthropic). The code, tests, and docs were drafted with AI and then reviewed and run by me.
+AI tools, including Claude (Anthropic), were used to assist with code, test and documentation development. I reviewed the implementation, ran the application and tests and take responsibility for the submitted work.
 
 ## How the decision logic works
 
