@@ -3,7 +3,6 @@ dist/
 __pycache__/
 .pytest_cache/
 .venv/
-backend/static/
 .env
 .vercel
 docs/
