@@ -72,3 +72,18 @@ def test_missing_data_gives_503(tmp_path, monkeypatch):
     monkeypatch.setattr(data, "DATA_DIR", tmp_path)
     main.get_dataset.cache_clear()
     assert TestClient(main.app).get("/api/meta").status_code == 503
+
+
+def test_path_is_restored_from_query_param(client):
+    """Mimics Vercel handing the app the rewritten path /api/index."""
+    r = client.get("/api/index?__path=/api/meta")
+    assert r.status_code == 200 and "delivery_days" in r.json()
+    r = client.get("/api/index?__path=/api/decision/2026-01-10&cutoff=09:00&path=api/decision/2026-01-10")
+    assert r.status_code == 200 and r.json()["delivery_day"] == "2026-01-10"
+    assert client.get("/api/meta").status_code == 200  # normal calls still work
+
+
+def test_unknown_api_route_is_json_404_not_html(client):
+    r = client.get("/api/nope")
+    assert r.status_code == 404
+    assert r.headers["content-type"].startswith("application/json")

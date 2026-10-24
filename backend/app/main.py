@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import date, time, timedelta
 from functools import lru_cache
 from pathlib import Path
+from urllib.parse import parse_qs, urlencode
 
 import pandas as pd
 from fastapi import FastAPI, HTTPException
@@ -17,6 +18,31 @@ DECISION_MONTH_START = date(2026, 1, 1)
 DECISION_MONTH_END = date(2026, 1, 31)
 
 app = FastAPI(title="Wind forecast portal", version="1.1.0")
+
+
+class RestorePathMiddleware:
+    """Vercel rewrites every request to one function. vercel.json passes the real path
+    as ?__path=... and this puts it back, so routing works even if the platform
+    hands us the rewritten path. Without the parameter it does nothing."""
+
+    def __init__(self, inner):
+        self.inner = inner
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http":
+            qs = parse_qs(scope.get("query_string", b"").decode(), keep_blank_values=True)
+            if "__path" in qs:
+                path = qs["__path"][0]
+                path = path if path.startswith("/") else "/" + path
+                rest = [(k, v) for k, vs in qs.items() if k not in ("__path", "path") for v in vs]
+                scope = dict(scope)
+                scope["path"] = path
+                scope["raw_path"] = path.encode()
+                scope["query_string"] = urlencode(rest).encode()
+        await self.inner(scope, receive, send)
+
+
+app.add_middleware(RestorePathMiddleware)
 
 
 @lru_cache(maxsize=1)
@@ -180,6 +206,8 @@ if STATIC_DIR.exists():
 
     @app.get("/{path:path}")
     def spa(path: str):
+        if path.startswith("api/"):
+            raise HTTPException(status_code=404, detail="Unknown API route")
         f = STATIC_DIR / path
         if path and f.is_file():
             return FileResponse(f)
