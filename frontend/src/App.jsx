@@ -42,7 +42,7 @@ export default function App() {
 
       <footer>
         Error = forecast minus actual. Positive means the forecast was too high, so you would have bought too little
-        from other sources. Built with AI assistance, see README.
+        from other sources. 
       </footer>
     </div>
   );
